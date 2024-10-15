@@ -6,16 +6,20 @@ import os
 
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///appointments.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///appointments.sqlite3'
+app.app_context().push()
 db = SQLAlchemy(app)
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20), nullable=False)  # New line
-    date = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.DateTime) #nullable=False
+    address = db.Column(db.String(150))
+    #created_at = db.Column(db.DateTime)
+
+db.create_all()
+
     
 @app.route('/')
 def index():
@@ -50,7 +54,13 @@ def book_appointment():
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
     
     # Process the appointment booking here
-    
+    firstName = data['firstName']
+    lastName = data['lastName']
+    address = data['address']
+    phone = data['phone']
+    new_appointment = Appointment(name=firstName+lastName,phone=phone,address=address)
+    db.session.add(new_appointment)
+    db.session.commit()
     return jsonify({"message": "Appointment booked successfully"}), 200
 
 if __name__ == '__main__':
